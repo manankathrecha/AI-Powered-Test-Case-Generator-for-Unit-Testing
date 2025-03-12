@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # OpenAI API key setup
-client = OpenAI(api_key="sk-svcacct-J_EVKgBaDmqhZ_rSiSt6HpUPLDyngHw-PLPSZvrnEnlVuWozSBm3Hb_FarVWAff_Z3ayfDohh_QT3BlbkFJhso6D-q-MmBhjAXf8hVPb1eZ8vbwC8gW5nnY-7D8lnp-HYXUZW-nf9HOCWEbqXt-KBBMNLLziAA")  # Store securely in environment variables
+client = OpenAI(api_key="*")  # Store securely in environment variables, Replace * with your API key
 
 # Function to detect the programming language
 def detect_language(code: str):
