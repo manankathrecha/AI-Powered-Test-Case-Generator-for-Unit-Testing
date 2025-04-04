@@ -16,7 +16,7 @@ body {
 .left-side {
   flex: 1;
   padding: 40px;
-  background-color: #ffffff;
+  background-color: #f9f9f9;
   border-right: 1px solid #ddd;
   display: flex;
   flex-direction: column;
@@ -132,6 +132,6 @@ textarea {
   font-size: 14px;
   white-space: pre-wrap;
   word-wrap: break-word;
-  max-height: 400px;
+  max-height: 700px;
   overflow-y: auto;
 }
