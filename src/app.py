@@ -1,101 +1,108 @@
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from openai import AzureOpenAI
+from dotenv import load_dotenv
 import os
-from openai import OpenAI
 
-# Initialize Flask app
+# Load environment variables
+load_dotenv()
+
+# Set up Azure OpenAI client
+client = AzureOpenAI(
+    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+    api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+)
+DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
+
 app = Flask(__name__)
-
-# Enable CORS for frontend communication
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# OpenAI API key setup (HARD-CODED as before)
-client = OpenAI(api_key="*")  # 🔴 Replace with your actual API key
-
-# Function to detect the programming language
+# Detect programming language
 def detect_language(code: str):
     prompt = f"""
     Analyze the following code snippet and accurately identify the programming language.
-    
+
     Code:
     {code}
-    
-    Only respond with the language name, without any additional text.
-    """
 
+    Only respond with the language name, no extra text.
+    """
     try:
         response = client.chat.completions.create(
-            model="gpt-4-0613",
+            model=DEPLOYMENT_NAME,
             messages=[{"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=10
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
+        print("Language detection error:", e)
         return "Unknown"
 
-# Function to generate unit tests based on detected language
-def generate_test_cases(code: str, language: str):
+# Generate test cases
+def generate_test_cases(code: str, language: str, framework: str):
+    framework_notes = {
+        "pytest": "- Use `pytest` syntax, no unittest.\n- Use `assert` statements.",
+        "doctest": "- Use Python docstring doctest format for inline testing.",
+        "junit": "- Use JUnit 5 annotations like `@Test`, and assertions like `assertEquals`, etc."
+    }
+
+    additional_notes = "- Cover normal, edge, and invalid inputs.\n- Include comments for each test.\n- Return clean test code only."
+
     prompt = f"""
-    You are a highly skilled software engineer specializing in {language}.  
-    Your task is to generate **comprehensive, well-structured unit tests** for the given code.  
+You are a professional {language} developer and expert in unit testing.
 
-    ### **Code to test:**
-    ```{language}
-    {code}
-    ```
+Write unit tests for the following code using {framework}.
 
-    ### **Instructions:**
-    - **Follow best practices** for unit testing in {language}.
-    - Use the **appropriate testing framework** for {language}.
-    - Cover **all possible scenarios**, including:
-      - ✅ **Standard cases** (normal input values)
-      - 🛑 **Edge cases** (boundary values, extreme inputs)
-      - ❌ **Invalid cases** (handling errors & exceptions)
-    - If the function interacts with **external dependencies**, use **mocks/stubs**.
-    - Ensure tests are **clear, maintainable, and efficient**.
-    - **Include comments** explaining each test case.
+Code to Test:
+```{language}
+{code}
+```
 
-    ### **Expected Output:**
-    - A complete, runnable test suite.
-    - Uses proper assertions and structure.
-    - No unnecessary or redundant test cases.
+Testing Instructions:
+{framework_notes.get(framework.lower(), '')}
 
-    **Generated Unit Tests:**
-    """
+{additional_notes}
+
+Output ONLY the test code — no markdown, no explanations, no extra text.
+"""
+
     try:
         response = client.chat.completions.create(
-            model="gpt-4-0613",
+            model=DEPLOYMENT_NAME,
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.5,  # Lowered for more deterministic responses
-            max_tokens=600  # Increased for more detailed test cases
+            temperature=0.3,
+            max_tokens=1000
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        return f"Error generating test cases: {str(e)}"
+        print("Test generation error:", e)
+        return f"# Error generating test cases: {str(e)}"
 
+# API endpoint
 @app.route("/generate_tests", methods=["POST"])
 def generate_tests():
     try:
         data = request.get_json()
         input_code = data.get("code")
+        framework = data.get("framework", "pytest")
 
         if not input_code:
             return jsonify({"error": "No code provided"}), 400
 
-        # Detect language
-        detected_language = detect_language(input_code)
-
-        # Generate test cases
-        test_cases = generate_test_cases(input_code, detected_language)
+        language = detect_language(input_code)
+        test_code = generate_test_cases(input_code, language, framework)
 
         return jsonify({
-            "detected_language": detected_language,
-            "generated_tests": test_cases
+            "detected_language": language,
+            "generated_tests": test_code
         })
-
     except Exception as e:
+        print("Server error:", e)
         return jsonify({"error": str(e)}), 500
 
+# Run server
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
