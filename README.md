@@ -18,8 +18,7 @@ This project is an **AI-powered tool** that automatically generates unit test ca
 
 ```
 AI-Powered-Test-Case-Generator-for-Unit-Testing/
-├── frontend/                    # React + Vite frontend
-├── backend/                     # Flask API backend
+├── src/                         # Contains both frontend (React) and backend (Flask) code
 ├── generated_unit_test_cases/  # Auto-generated test files
 ├── reports/                     # Markdown reports
 ├── .env                         # API keys and environment variables
@@ -61,7 +60,7 @@ OPENAI_API_KEY=your_openai_key_here
 #### 🧪 Create and activate a virtual environment
 
 ```bash
-cd backend
+cd src
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -84,7 +83,7 @@ The Flask server should start on `http://localhost:5000`.
 - npm
 
 ```bash
-cd frontend
+cd src
 npm install
 npm run dev
 ```
