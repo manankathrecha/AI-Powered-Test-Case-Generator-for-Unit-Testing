@@ -1,59 +1,114 @@
-# Unit Test Generator
+# TestGenie - AI-Powered Unit Test Generator
 
-## Overview
+![TestGenie Logo](https://via.placeholder.com/150x150?text=TestGenie)
 
-Unit Test Generator (TestGenie) is an AI-powered tool that automatically creates unit tests for your code. By analyzing your source code, TestGenie detects the programming language and generates appropriate test cases using the selected testing framework.
+TestGenie is an AI-powered tool that automatically generates comprehensive unit tests for your code. Using advanced language models, TestGenie analyzes your code, detects the programming language, and creates appropriate test cases using the selected testing framework.
+
+## Table of Contents
+
+- [Features](#features)
+- [Getting Started](#getting-started)
+  - [Option 1: Using the Web Interface](#option-1-using-the-web-interface)
+  - [Option 2: Running Locally](#option-2-running-locally)
+  - [Option 3: GitHub Actions Integration](#option-3-github-actions-integration)
+- [Usage Guide](#usage-guide)
+  - [Web Interface](#web-interface)
+  - [Supported Languages and Frameworks](#supported-languages-and-frameworks)
+  - [Feedback-Based Refinement](#feedback-based-refinement)
+- [Contributing](#contributing)
 
 ## Features
 
-- **Automatic Language Detection**: Identifies the programming language of your code
-- **Multiple Framework Support**: Generates tests for Pytest, JUnit, and Doctest
-- **Test Case Refinement**: Provides feedback mechanism to improve generated tests
-- **One-Click Export**: Download tests or copy to clipboard with a single click
-- **GitHub Actions Integration**: Automatically generate tests on pull requests
+- **Automatic Language Detection**: TestGenie identifies your programming language
+- **Multiple Testing Frameworks**: Support for Pytest, JUnit, and Doctest
+- **Comprehensive Test Coverage**: Generates tests for normal cases, edge cases, and exceptions
+- **Feedback Mechanism**: Refine generated tests based on your requirements
+- **Easy Export**: Copy to clipboard or download generated tests with proper file extensions
+- **GitHub Actions Integration**: Automatically generate tests for your pull requests
 
-## Accessing the Web Interface
+## Getting Started
 
-The Unit Test Generator is accessible online at [https://testgenie.com](https://testgenie.com)
+### Option 1: Using the Web Interface
 
-## Using the Web Interface
+The easiest way to use TestGenie is through our hosted web interface:
 
-### Step 1: Enter Your Code
+1. Visit [https://testgenie.com](https://testgenie.com)
+2. Paste your code in the input area
+3. Select your preferred testing framework
+4. Click "Generate Test Cases"
 
-Paste your source code into the text area on the left side of the screen.
+No installation required!
 
-### Step 2: Select a Testing Framework
+### Option 2: Running Locally
 
-Choose the appropriate testing framework from the dropdown menu:
-- **Pytest**: For Python code using pytest framework
-- **JUnit**: For Java code using JUnit framework
-- **Doctest**: For Python code using doctest framework
+If you prefer to run TestGenie on your own machine:
 
-### Step 3: Generate Test Cases
+#### Prerequisites
 
-Click the "Generate Test Cases" button to analyze your code and create test cases.
+- Python 3.8+
+- Node.js 14+
+- OpenAI API key or Azure OpenAI credentials
 
-### Step 4: Review and Export
+#### Backend Setup
 
-The generated test cases will appear on the right side of the screen. You can:
-- Copy the test cases to your clipboard using the "Copy to Clipboard" button
-- Download the test cases as a file using the "Download as File" button
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/testgenie.git
+   cd testgenie
+   ```
 
-### Step 5: Refine the Test Cases (Optional)
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-If you want to improve the generated tests:
-1. Enter your feedback in the text area below the test cases
-2. Click "Submit Feedback & Regenerate" to create updated test cases based on your feedback
+3. Install backend dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## GitHub Actions Integration
+4. Create a `.env` file in the project root with your API credentials:
+   ```
+   # Option 1: OpenAI API
+   OPENAI_API_KEY=your_api_key_here
+   
+   # Option 2: Azure OpenAI
+   AZURE_OPENAI_API_KEY=your_azure_api_key_here
+   AZURE_OPENAI_ENDPOINT=your_azure_endpoint_here
+   AZURE_OPENAI_API_VERSION=your_api_version_here
+   AZURE_OPENAI_DEPLOYMENT_NAME=your_deployment_name_here
+   ```
 
-You can integrate Unit Test Generator directly into your GitHub workflow to automatically generate test cases on pull requests.
+5. Start the Flask backend:
+   ```bash
+   python app.py
+   ```
+   The API will be available at `http://localhost:5000`
 
-### Setup Instructions
+#### Frontend Setup
 
-1. Create a `.github/workflows` directory in your repository if it doesn't already exist
-2. Create a new file in this directory named `test-genie.yml`
-3. Copy the following workflow definition into this file:
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install frontend dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+   ```bash
+   npm start
+   ```
+   The application will be available at `http://localhost:3000`
+
+### Option 3: GitHub Actions Integration
+
+TestGenie can be integrated into your GitHub workflow to automatically generate test cases for pull requests:
+
+1. Add the following GitHub Actions workflow file to your repository at `.github/workflows/testgenie.yml`:
 
 ```yaml
 name: Auto Generate Unit Tests
@@ -118,79 +173,55 @@ jobs:
         git push origin ${{ github.head_ref }}
 ```
 
-4. Add the following secrets to your GitHub repository:
-   - `AZURE_OPENAI_API_KEY`: Your Azure OpenAI API key
-   - `AZURE_OPENAI_ENDPOINT`: Your Azure OpenAI service endpoint
-   - `AZURE_OPENAI_API_VERSION`: The API version to use
-   - `AZURE_OPENAI_DEPLOYMENT_NAME`: The deployment name for the model
+2. Add the required secrets to your GitHub repository:
+   - Go to your repository settings
+   - Navigate to "Secrets and variables" → "Actions"
+   - Add the following secrets:
+     - `AZURE_OPENAI_API_KEY`
+     - `AZURE_OPENAI_ENDPOINT`
+     - `AZURE_OPENAI_API_VERSION`
+     - `AZURE_OPENAI_DEPLOYMENT_NAME`
 
-### How the GitHub Action Works
+3. The GitHub Action will now automatically run on any pull request, generating test cases for your code changes.
 
-1. When a pull request is created or updated, the workflow is triggered
-2. The action checks out your code and sets up the required dependencies
-3. It starts a temporary Flask server to handle the test generation
-4. The test generator script processes changed files and generates appropriate test cases
-5. Generated tests are saved in the `generated_unit_test_cases` directory
-6. A report is created at `reports/generated_tests_report.md`
-7. The action commits and pushes these files to your pull request branch
+## Usage Guide
 
-### Configuration Options
+### Web Interface
 
-#### requirements.txt
+The TestGenie web interface is intuitive and easy to use:
 
-Ensure your repository has a `requirements.txt` file containing:
+1. **Input Code**: Paste your code into the left panel
+2. **Select Framework**: Choose the appropriate testing framework from the dropdown
+3. **Generate Tests**: Click the "Generate Test Cases" button
+4. **View Results**: Examine the generated tests in the right panel
+5. **Export Tests**: Copy to clipboard or download as a file
+6. **Refine Tests (Optional)**: Provide feedback to improve the generated tests
 
-```
-flask==2.0.1
-flask-cors==3.0.10
-openai==1.3.0
-python-dotenv==0.19.1
-requests==2.26.0
-```
+### Supported Languages and Frameworks
 
-#### Directory Structure
-
-Make sure the following files are in the correct locations:
-
-- `app.py`: The Flask backend application (in the `src` directory by default)
-- `test_generator.py`: The script that processes files and generates tests (in the repository root)
-
-## Supported Languages & Frameworks
+TestGenie currently supports:
 
 | Language | Frameworks |
 |----------|------------|
 | Python   | Pytest, Doctest |
 | Java     | JUnit |
 
-## Best Practices
+Additional languages and frameworks will be added in future updates.
 
-For optimal test generation:
+### Feedback-Based Refinement
 
-1. **Ensure your code is well-structured**: Functions/methods with clear inputs and outputs produce better tests
-2. **Include docstrings/comments**: These help the AI understand your code's intent
-3. **Provide specific feedback**: When refining test cases, specify exactly what aspects need improvement
-4. **Use appropriate frameworks**: Select the framework that best matches your code's language
+If you want to improve the generated tests:
 
-## Troubleshooting
+1. After generating initial tests, review them for completeness
+2. Enter specific feedback in the feedback box (e.g., "Add more edge cases" or "Use mocks for the database calls")
+3. Click "Submit Feedback & Regenerate"
+4. TestGenie will create new tests incorporating your feedback
 
-### Common Issues
+## Contributing
 
-**Error: "No code provided"**
-- Make sure you've pasted code into the input area
+We welcome contributions to TestGenie! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) file for details on how to submit pull requests, report issues, and suggest enhancements.
 
-**Error: "Language and framework mismatch"**
-- Ensure you've selected the appropriate testing framework for your code's language
 
-**GitHub Action fails to generate tests**
-- Check that your repository has the correct secrets configured
-- Verify the working directory in the workflow file matches your repository structure
+---
 
-### Getting Help
-
-If you encounter any issues not covered here, please:
-1. Check the [FAQ](https://testgenie.com/faq) on our website
-2. Submit a support request through our [contact form](https://testgenie.com/contact)
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+© 2025 TestGenie | [testgenie.com](https://testgenie.com) | [GitHub Repository](https://github.com/yourusername/testgenie)
