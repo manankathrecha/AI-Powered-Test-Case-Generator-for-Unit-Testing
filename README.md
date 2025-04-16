@@ -1,227 +1,150 @@
-# TestGenie - AI-Powered Unit Test Generator
+# 🧪 AI-Powered Test Case Generator for Unit Testing
 
-![TestGenie Logo](https://via.placeholder.com/150x150?text=TestGenie)
+This project is an **AI-powered tool** that automatically generates unit test cases for your source code using OpenAI’s language model. It supports multiple programming languages and testing frameworks, and provides a smooth developer experience with a user-friendly frontend built using **React + Vite**, and a powerful **Flask backend**.
 
-TestGenie is an AI-powered tool that automatically generates comprehensive unit tests for your code. Using advanced language models, TestGenie analyzes your code, detects the programming language, and creates appropriate test cases using the selected testing framework.
+## 🚀 Features
 
-## Table of Contents
-
-- [Features](#features)
-- [Getting Started](#getting-started)
-  - [Option 1: Using the Web Interface](#option-1-using-the-web-interface)
-  - [Option 2: Running Locally](#option-2-running-locally)
-  - [Option 3: GitHub Actions Integration](#option-3-github-actions-integration)
-- [Usage Guide](#usage-guide)
-  - [Web Interface](#web-interface)
-  - [Supported Languages and Frameworks](#supported-languages-and-frameworks)
-  - [Feedback-Based Refinement](#feedback-based-refinement)
-- [Contributing](#contributing)
-
-## Features
-
-- **Automatic Language Detection**: TestGenie identifies your programming language
-- **Multiple Testing Frameworks**: Support for Pytest, JUnit, and Doctest
-- **Comprehensive Test Coverage**: Generates tests for normal cases, edge cases, and exceptions
-- **Feedback Mechanism**: Refine generated tests based on your requirements
-- **Easy Export**: Copy to clipboard or download generated tests with proper file extensions
-- **GitHub Actions Integration**: Automatically generate tests for your pull requests
-
-## Getting Started
-
-### Option 1: Using the Web Interface
-
-The easiest way to use TestGenie is through our hosted web interface:
-
-1. Visit [https://testgenie.com](https://testgenie.com)
-2. Paste your code in the input area
-3. Select your preferred testing framework
-4. Click "Generate Test Cases"
-
-No installation required!
-
-### Option 2: Running Locally
-
-If you prefer to run TestGenie on your own machine:
-
-#### Prerequisites
-
-- Python 3.8+
-- Node.js 14+
-- OpenAI API key or Azure OpenAI credentials
-
-#### Backend Setup
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/testgenie.git
-   cd testgenie
-   ```
-
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install backend dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Create a `.env` file in the project root with your API credentials:
-   ```
-   # Option 1: OpenAI API
-   OPENAI_API_KEY=your_api_key_here
-   
-   # Option 2: Azure OpenAI
-   AZURE_OPENAI_API_KEY=your_azure_api_key_here
-   AZURE_OPENAI_ENDPOINT=your_azure_endpoint_here
-   AZURE_OPENAI_API_VERSION=your_api_version_here
-   AZURE_OPENAI_DEPLOYMENT_NAME=your_deployment_name_here
-   ```
-
-5. Start the Flask backend:
-   ```bash
-   python app.py
-   ```
-   The API will be available at `http://localhost:5000`
-
-#### Frontend Setup
-
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install frontend dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm start
-   ```
-   The application will be available at `http://localhost:3000`
-
-### Option 3: GitHub Actions Integration
-
-TestGenie can be integrated into your GitHub workflow to automatically generate test cases for pull requests:
-
-1. Add the following GitHub Actions workflow file to your repository at `.github/workflows/testgenie.yml`:
-
-```yaml
-name: Auto Generate Unit Tests
-
-on:
-  pull_request  # Runs on any file change in a PR
-
-permissions:
-  contents: write  # Allows GitHub Actions to push commits
-
-jobs:
-  test-generation:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-
-    - name: Install Python dependencies
-      run: |
-        pip install -r requirements.txt
-
-    - name: Start Flask backend (Azure OpenAI)
-      working-directory: src  # 🔁 change if app.py is in a different folder
-      env:
-        AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-        AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-        AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
-        AZURE_OPENAI_DEPLOYMENT_NAME: ${{ secrets.AZURE_OPENAI_DEPLOYMENT_NAME }}
-      run: |
-        nohup python app.py & sleep 5
-
-    - name: Run Test Generator Script
-      run: |
-        python test_generator.py
-        echo "✅ Test cases written to generated_tests_report.md"
-        echo "---- GENERATED TEST CASES ----"
-        cat generated_tests_report.md || echo "⚠️ No test file generated"
-
-    - name: Commit and push generated test cases and report
-      if: success() && (hashFiles('generated_tests_report.md') != '' || hashFiles('generated_unit_test_cases/**') != '')
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-        mkdir -p reports
-        mv generated_tests_report.md reports/generated_tests_report.md || true
-
-        git fetch origin ${{ github.head_ref }}
-        git checkout ${{ github.head_ref }}
-
-        git add reports/generated_tests_report.md
-        git add generated_unit_test_cases/
-
-        git diff --cached --quiet || git commit -m "🧪 Add generated unit test cases and report"
-
-        git push origin ${{ github.head_ref }}
-```
-
-2. Add the required secrets to your GitHub repository:
-   - Go to your repository settings
-   - Navigate to "Secrets and variables" → "Actions"
-   - Add the following secrets:
-     - `AZURE_OPENAI_API_KEY`
-     - `AZURE_OPENAI_ENDPOINT`
-     - `AZURE_OPENAI_API_VERSION`
-     - `AZURE_OPENAI_DEPLOYMENT_NAME`
-
-3. The GitHub Action will now automatically run on any pull request, generating test cases for your code changes.
-
-## Usage Guide
-
-### Web Interface
-
-The TestGenie web interface is intuitive and easy to use:
-
-1. **Input Code**: Paste your code into the left panel
-2. **Select Framework**: Choose the appropriate testing framework from the dropdown
-3. **Generate Tests**: Click the "Generate Test Cases" button
-4. **View Results**: Examine the generated tests in the right panel
-5. **Export Tests**: Copy to clipboard or download as a file
-6. **Refine Tests (Optional)**: Provide feedback to improve the generated tests
-
-### Supported Languages and Frameworks
-
-TestGenie currently supports:
-
-| Language | Frameworks |
-|----------|------------|
-| Python   | Pytest, Doctest |
-| Java     | JUnit |
-
-Additional languages and frameworks will be added in future updates.
-
-### Feedback-Based Refinement
-
-If you want to improve the generated tests:
-
-1. After generating initial tests, review them for completeness
-2. Enter specific feedback in the feedback box (e.g., "Add more edge cases" or "Use mocks for the database calls")
-3. Click "Submit Feedback & Regenerate"
-4. TestGenie will create new tests incorporating your feedback
-
-## Contributing
-
-We welcome contributions to TestGenie! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) file for details on how to submit pull requests, report issues, and suggest enhancements.
-
+- 🔍 **Automatic Language Detection**: Detects the programming language of your code.
+- ⚙️ **Framework-Specific Test Generation**: Supports `pytest`, `JUnit`, and `doctest`.
+- 📂 **Separate File Generation**: Test cases are saved in individual files based on class names.
+- 🔁 **Real-time Feedback Loop** *(Coming Soon)*: Developers can rate and regenerate test cases.
+- 🧠 **Interactive Chat Support** *(Planned)*: Regenerate test cases based on developer feedback.
+- ✅ **CI/CD Integration** *(Planned)*: Auto-generate test cases on every pull request.
+- 📊 **Reports**: Automatically generate markdown reports for all created test cases.
 
 ---
 
-© 2025 TestGenie | [testgenie.com](https://testgenie.com) | [GitHub Repository](https://github.com/yourusername/testgenie)
+## 🏗️ Project Structure
+
+```
+AI-Powered-Test-Case-Generator-for-Unit-Testing/
+├── frontend/                    # React + Vite frontend
+├── backend/                     # Flask API backend
+├── generated_unit_test_cases/  # Auto-generated test files
+├── reports/                     # Markdown reports
+├── .env                         # API keys and environment variables
+└── README.md                    # Project documentation
+```
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React.js (Vite), Tailwind CSS
+- **Backend**: Flask, OpenAI API
+- **Others**: Python, Node.js, GitHub Actions
+
+---
+
+## 📥 Getting Started
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/manankathrecha/AI-Powered-Test-Case-Generator-for-Unit-Testing.git
+cd AI-Powered-Test-Case-Generator-for-Unit-Testing
+```
+
+---
+
+### 2️⃣ Backend Setup (Flask)
+
+#### 📌 Prerequisites
+- Python 3.8+
+- pip
+- Create a `.env` file with your OpenAI API key:
+
+```env
+OPENAI_API_KEY=your_openai_key_here
+```
+
+#### 🧪 Create and activate a virtual environment
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+#### ▶️ Run the backend server
+
+```bash
+python app.py
+```
+
+The Flask server should start on `http://localhost:5000`.
+
+---
+
+### 3️⃣ Frontend Setup (React + Vite)
+
+#### 📌 Prerequisites
+- Node.js (v18+ recommended)
+- npm
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will run on `http://localhost:5173`.
+
+---
+
+## 💡 How It Works
+
+1. Paste your code into the frontend text box.
+2. The app detects the programming language.
+3. You choose a supported test framework (based on language).
+4. OpenAI API generates corresponding unit test cases.
+5. The generated test is:
+   - Saved in `generated_unit_test_cases/`
+   - Reported in `reports/generated_tests_report.md`
+
+---
+
+## 🧪 Example Output
+
+For a Java class `Calculator`, the tool generates a `CalculatorTest.java` file like:
+
+```java
+@Test
+public void testAdd_positiveNumbers() {
+    int result = Calculator.add(3, 5);
+    assertEquals(8, result);
+}
+```
+
+---
+
+## 🧰 Future Enhancements
+
+- 🌐 Feedback chat interface to regenerate better tests
+- 🧪 More framework support: `Mocha`, `RSpec`, `GoTest`, etc.
+- 🔁 GitHub Action integration for test automation
+- 🗂️ Downloadable zip of all test cases
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Feel free to:
+- Create issues for bugs or features
+- Submit pull requests
+- Suggest UI/UX improvements
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+---
+
+## 🔗 Related Links
+
+- 🔗 [OpenAI API](https://platform.openai.com/docs/)
+- 🔗 [Flask Documentation](https://flask.palletsprojects.com/)
+- 🔗 [React Documentation](https://reactjs.org/)
