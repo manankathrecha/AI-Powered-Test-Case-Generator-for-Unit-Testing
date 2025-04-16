@@ -1,0 +1,60 @@
+name: Auto Generate Unit Tests
+
+on:
+  pull_request  # Runs on any file change in a PR
+
+permissions:
+  contents: write  # Allows GitHub Actions to push commits
+
+jobs:
+  test-generation:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install Python dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Start Flask backend (Azure OpenAI)
+      working-directory: src  # 🔁 change if app.py is in a different folder
+      env:
+        AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+        AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
+        AZURE_OPENAI_DEPLOYMENT_NAME: ${{ secrets.AZURE_OPENAI_DEPLOYMENT_NAME }}
+      run: |
+        nohup python app.py & sleep 5
+
+    - name: Run Test Generator Script
+      run: |
+        python test_generator.py
+        echo "✅ Test cases written to generated_tests_report.md"
+        echo "---- GENERATED TEST CASES ----"
+        cat generated_tests_report.md || echo "⚠️ No test file generated"
+
+    - name: Commit and push generated test cases and report
+      if: success() && (hashFiles('generated_tests_report.md') != '' || hashFiles('generated_unit_test_cases/**') != '')
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        mkdir -p reports
+        mv generated_tests_report.md reports/generated_tests_report.md || true
+
+        git fetch origin ${{ github.head_ref }}
+        git checkout ${{ github.head_ref }}
+
+        git add reports/generated_tests_report.md
+        git add generated_unit_test_cases/
+
+        git diff --cached --quiet || git commit -m "🧪 Add generated unit test cases and report"
+
+        git push origin ${{ github.head_ref }}
