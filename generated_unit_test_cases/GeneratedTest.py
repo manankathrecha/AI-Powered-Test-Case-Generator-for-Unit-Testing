@@ -1,85 +1,68 @@
 ```python
 import pytest
-from unittest.mock import patch, mock_open
-import os
-import subprocess
-import requests
-from main import get_changed_files, read_file_content, send_to_backend, extract_class_name
+import json
+from app import app, detect_language, generate_test_cases
 
 @pytest.fixture
-def mock_subprocess_check_output():
-    with patch("subprocess.check_output") as mock:
-        yield mock
+def client():
+    with app.test_client() as client:
+        yield client
 
-@pytest.fixture
-def mock_requests_post():
-    with patch("requests.post") as mock:
-        yield mock
+def test_detect_language():
+    # Test Python code detection
+    code = 'print("Hello, World!")'
+    result = detect_language(code)
+    assert result == 'Python'
 
-def test_get_changed_files_normal_case(mock_subprocess_check_output):
-    # Mock subprocess output for normal case
-    mock_subprocess_check_output.return_value = b"file1.py\nfile2.java\n"
-    result = get_changed_files()
-    assert result == ["file1.py", "file2.java"]
+    # Test JavaScript code detection
+    code = 'console.log("Hello, World!");'
+    result = detect_language(code)
+    assert result == 'JavaScript'
 
-def test_get_changed_files_fallback_case(mock_subprocess_check_output):
-    # Simulate CalledProcessError for HEAD~1 and fallback to ls-files
-    mock_subprocess_check_output.side_effect = [subprocess.CalledProcessError(1, "git diff"), b"file1.py\nfile2.java\n"]
-    result = get_changed_files()
-    assert result == ["file1.py", "file2.java"]
+    # Test unknown language detection
+    code = 'unknown language code'
+    result = detect_language(code)
+    assert result == 'Unknown'
 
-def test_get_changed_files_error_case(mock_subprocess_check_output):
-    # Simulate an unexpected error
-    mock_subprocess_check_output.side_effect = Exception("Unexpected error")
-    result = get_changed_files()
-    assert result == []
+def test_generate_test_cases():
+    # Test Python test case generation
+    code = 'def add(a, b): return a + b'
+    language = 'Python'
+    result = generate_test_cases(code, language)
+    assert result is not None
 
-def test_read_file_content_success():
-    # Mock file reading
-    mock_data = "class Test:\n    pass"
-    with patch("builtins.open", mock_open(read_data=mock_data)):
-        result = read_file_content("file1.py")
-    assert result == mock_data
+    # Test JavaScript test case generation
+    code = 'function add(a, b) { return a + b; }'
+    language = 'JavaScript'
+    result = generate_test_cases(code, language)
+    assert result is not None
 
-def test_read_file_content_file_not_found():
-    # Simulate file not found error
-    with patch("builtins.open", side_effect=FileNotFoundError("File not found")):
-        result = read_file_content("nonexistent.py")
-    assert result == ""
+    # Test invalid language input
+    code = 'print("Hello, World!")'
+    language = 'Unknown'
+    result = generate_test_cases(code, language)
+    assert result is None
 
-def test_read_file_content_permission_error():
-    # Simulate permission error
-    with patch("builtins.open", side_effect=PermissionError("Permission denied")):
-        result = read_file_content("restricted.py")
-    assert result == ""
+def test_generate_tests_endpoint(client):
+    # Test valid request with Python code
+    response = client.post('/generate_tests', data=json.dumps({"code": 'print("Hello, World!")'}), content_type='application/json')
+    assert response.status_code == 200
+    data = json.loads(response.get_data())
+    assert data["detected_language"] == 'Python'
+    assert data["generated_tests"] is not None
 
-def test_send_to_backend_success(mock_requests_post):
-    # Mock successful API response
-    mock_requests_post.return_value.json.return_value = {"detected_language": "Python", "generated_tests": "test_code"}
-    result = send_to_backend("class Test:\n    pass", "pytest")
-    assert result == {"detected_language": "Python", "generated_tests": "test_code"}
+    # Test valid request with JavaScript code
+    response = client.post('/generate_tests', data=json.dumps({"code": 'console.log("Hello, World!");'}), content_type='application/json')
+    assert response.status_code == 200
+    data = json.loads(response.get_data())
+    assert data["detected_language"] == 'JavaScript'
+    assert data["generated_tests"] is not None
 
-def test_send_to_backend_api_error(mock_requests_post):
-    # Simulate API error
-    mock_requests_post.side_effect = requests.exceptions.RequestException("API error")
-    result = send_to_backend("class Test:\n    pass", "pytest")
-    assert result == {"error": "API error: API error"}
+    # Test invalid request with empty payload
+    response = client.post('/generate_tests', data=json.dumps({}), content_type='application/json')
+    assert response.status_code == 400
 
-def test_extract_class_name_python():
-    # Test Python class name extraction
-    code = "class MyClass:\n    pass"
-    result = extract_class_name(code, "Python")
-    assert result == "MyClass"
-
-def test_extract_class_name_java():
-    # Test Java class name extraction
-    code = "public class MyJavaClass {\n    // code here\n}"
-    result = extract_class_name(code, "Java")
-    assert result == "MyJavaClass"
-
-def test_extract_class_name_no_class():
-    # Test when no class is found
-    code = "def my_function():\n    pass"
-    result = extract_class_name(code, "Python")
-    assert result == "Generated"
+    # Test invalid request with missing 'code' field
+    response = client.post('/generate_tests', data=json.dumps({"language": "Python"}), content_type='application/json')
+    assert response.status_code == 400
 ```
