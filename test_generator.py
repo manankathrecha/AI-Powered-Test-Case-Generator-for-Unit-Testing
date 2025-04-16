@@ -13,7 +13,6 @@ FRAMEWORK_MAP = {
 
 def get_changed_files():
     try:
-        # Try HEAD~1 (normal case)
         try:
             output = subprocess.check_output(["git", "diff", "--name-only", "HEAD~1"]).decode()
             files = [line.strip() for line in output.split("\n") if line.strip()]
@@ -22,7 +21,6 @@ def get_changed_files():
         except subprocess.CalledProcessError as e:
             print(f"HEAD~1 diff failed: {e}")
 
-        # Fallback for first commit or shallow clone
         print("Using fallback: listing all tracked files with git ls-files")
         output = subprocess.check_output(["git", "ls-files"]).decode()
         return [line.strip() for line in output.split("\n") if line.strip()]
@@ -45,14 +43,21 @@ def send_to_backend(code, framework):
     except Exception as e:
         return {"error": f"API error: {e}"}
 
-def extract_class_name(code, language):
+def extract_class_name(code, language, fallback_filename=None):
+    # Match the first class name in the code
     if language.lower() == "python":
         match = re.search(r'class\s+(\w+)', code)
     elif language.lower() == "java":
         match = re.search(r'public\s+class\s+(\w+)', code)
     else:
         match = re.search(r'class\s+(\w+)', code)
-    return match.group(1) if match else "Generated"
+
+    if match:
+        return match.group(1)
+    elif fallback_filename:
+        return os.path.splitext(os.path.basename(fallback_filename))[0]
+    else:
+        return "Generated"
 
 def main():
     changed_files = get_changed_files()
@@ -73,13 +78,12 @@ def main():
             detected_lang = response.get("detected_language", "Unknown")
             test_code = response.get("generated_tests", "Failed to generate.")
 
-            class_name = extract_class_name(code, detected_lang)
+            class_name = extract_class_name(code, detected_lang, file)
             ext_map = {"python": "py", "java": "java"}
             file_ext = ext_map.get(detected_lang.lower(), "txt")
             file_name = f"{class_name}Test.{file_ext}"
             output_path = os.path.join("generated_unit_test_cases", file_name)
 
-            # Save the generated test case
             os.makedirs("generated_unit_test_cases", exist_ok=True)
             with open(output_path, "w", encoding="utf-8") as f:
                 f.write(test_code)
@@ -98,7 +102,6 @@ def main():
         print("⚠️ No supported files found or no test cases generated.")
         return
 
-    # Output all results summary
     report_file = "generated_tests_report.md"
     with open(report_file, "w", encoding="utf-8") as f:
         for r in results:
