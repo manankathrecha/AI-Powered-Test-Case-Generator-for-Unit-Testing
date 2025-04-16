@@ -4,6 +4,7 @@ from openai import AzureOpenAI
 from dotenv import load_dotenv
 import os
 import re
+from code_cleaning_util import clean_test_code  # ✅ Import the reusable cleaner
 
 # Load environment variables
 load_dotenv()
@@ -75,7 +76,7 @@ Output ONLY the test code — no markdown, no explanations, no extra text.
             temperature=0.3,
             max_tokens=1000
         )
-        return response.choices[0].message.content.strip()
+        return clean_test_code(response.choices[0].message.content.strip())
     except Exception as e:
         print("Test generation error:", e)
         return f"# Error generating test cases: {str(e)}"
@@ -156,9 +157,8 @@ Output ONLY the test code — no markdown, no explanations, no extra text.
             temperature=0.3,
             max_tokens=1000
         )
-        return jsonify({
-            "generated_tests": response.choices[0].message.content.strip()
-        })
+        test_code = clean_test_code(response.choices[0].message.content.strip())
+        return jsonify({"generated_tests": test_code})
     except Exception as e:
         print("Regeneration error:", e)
         return jsonify({"error": str(e)}), 500

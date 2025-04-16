@@ -1,5 +1,0 @@
-- `generated_unit_test_cases/GeneratedTest.py` → **generated_unit_test_cases/TestTest.py** (Python, pytest)
-- `generated_unit_test_cases/MyClassTest.py` → **generated_unit_test_cases/nameTest.py** (Python, pytest)
-- `generated_unit_test_cases/TestAppTest.py` → **generated_unit_test_cases/GeneratedTest.py** (Python, pytest)
-- `src/app.py` → **generated_unit_test_cases/nameTest.py** (Python, pytest)
-- `test_generator.py` → **generated_unit_test_cases/GeneratedTest.txt** (Unknown, pytest)
