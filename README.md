@@ -1,7 +1,5 @@
 # Unit Test Generator
 
-![Test Genie Logo](https://placehold.co/600x200?text=TestGenie) 
-
 ## Overview
 
 Unit Test Generator (TestGenie) is an AI-powered tool that automatically creates unit tests for your code. By analyzing your source code, TestGenie detects the programming language and generates appropriate test cases using the selected testing framework.
